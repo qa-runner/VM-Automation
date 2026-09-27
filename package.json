@@ -1,0 +1,20 @@
+{
+  "name": "playwright-pom-framework",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "allure:generate": "npx allure generate allure-results --clean -o allure-report",
+    "allure:open": "npx allure open allure-report",
+    "allure:clear": "npx rimraf allure-results allure-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "allure-commandline": "^2.46.1",
+    "allure-playwright": "^3.12.2",
+    "rimraf": "^6.1.3"
+  }
+}

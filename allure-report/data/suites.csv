@@ -1,0 +1,2 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","7401","user should login successfully and land on dashboard","chromium","2026-09-27","passed","2026-09-27","AyushManager login flow","auth\login.spec.js","",""
