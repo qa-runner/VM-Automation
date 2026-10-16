@@ -6,10 +6,16 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
+    "test:allure": "playwright test",
+    "test:ids": "node ./scripts/check-test-ids.js",
     "report": "playwright show-report",
-    "allure:generate": "npx allure generate allure-results --clean -o allure-report",
-    "allure:open": "npx allure open allure-report",
-    "allure:clear": "npx rimraf allure-results allure-report"
+    "allure:generate": "npx allure generate ./allure-results --clean -o ./allure-report && npm run allure:trends",
+    "allure:trends": "node ./scripts/allure-history.js sync",
+    "allure:trends:clear": "node ./scripts/allure-history.js clear",
+    "allure:open": "node ./scripts/open-allure.js",
+    "allure:report": "npm run allure:generate && node ./scripts/open-allure.js",
+    "allure:serve": "npx allure serve ./allure-results --host 127.0.0.1 --port 5050",
+    "allure:clear": "npx rimraf allure-results allure-report allure-history"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0",

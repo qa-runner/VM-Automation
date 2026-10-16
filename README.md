@@ -1,199 +1,105 @@
 # AyushManager Automation Suite
 
-This project is a Playwright-based UI automation framework for the AyushManager application. It follows a Page Object Model (POM) structure and focuses on validating real user workflows such as login and patient registration in a reliable, repeatable, and maintainable way.
+Playwright UI automation for the AyushManager app (`https://appdev.ayushmanager.com`), written in JavaScript with a Page Object Model structure.
 
-The main goal is to reduce manual regression effort and provide a clean foundation for future test coverage as the application grows.
-
-## Why this project exists
-
-- Automate critical business workflows in AyushManager
-- Validate login and dashboard navigation reliably
-- Test patient creation workflows end-to-end
-- Keep test code readable, reusable, and easy to extend
-- Produce both HTML and Allure reports for debugging and tracking
+100 tests, TC001–TC100 with no gaps, across Auth, Dashboard, Patient, Inquiry, Appointment, Therapy, Activity and Reports. See [TESTS.md](TESTS.md) for the module-wise list.
 
 ## Tech stack
 
-- Playwright for browser automation
-- JavaScript with Node.js
-- Page Object Model architecture
-- Allure reporting integration
-- HTML reporting built into Playwright
+Playwright, JavaScript (Node.js), Page Object Model, Allure and HTML reports, Chromium.
 
-## Project structure
+## Structure
 
 ```text
 VM-Automation/
 ├── data/
-│   └── credentials.json
-├── pages/
-│   ├── auth/
-│   │   └── LoginPage.js
-│   ├── base/
-│   │   └── BasePage.js
-│   ├── dashboard/
-│   │   └── DashboardPage.js
-│   └── patient/
-│       └── PatientPage.js
-├── tests/
-│   ├── auth/
-│   │   └── login.spec.js
-│   └── patient/
-│       └── addPatient.spec.js
-├── allure-report/
-├── allure-results/
-├── test-results/
-├── package.json
+│   └── credentials.json        QA user used by the auth tests
+├── pages/                      one page object per screen
+│   ├── base/BasePage.js
+│   ├── auth/LoginPage.js, ForgotPasswordPage.js
+│   ├── dashboard/DashboardPage.js, HeaderPage.js
+│   ├── inquiry/InquiryPage.js
+│   ├── patient/PatientPage.js, PatientListTabsPage.js
+│   ├── appointment/AppointmentCalendarPage.js
+│   ├── therapy/TherapyListPage.js, AdvisedTherapiesPage.js
+│   ├── activity/ActivityLogPage.js
+│   └── report/AppointmentReportPage.js, DayEndReportPage.js,
+│             InvoiceReportPage.js, MedicineBillReportPage.js,
+│             PatientReportPage.js
+├── tests/                      module folders, one file per feature
+│   ├── auth/authentication.spec.js
+│   ├── dashboard/location-switching.spec.js, search-palette.spec.js,
+│   │   dashboard-widgets.spec.js
+│   ├── patient/registration.spec.js, patient-list.spec.js,
+│   │   patient-list-controls.spec.js
+│   ├── inquiry/inquiry-page.spec.js, inquiry-search.spec.js,
+│   │   inquiry-filters.spec.js, inquiry-row-actions.spec.js,
+│   │   inquiry-update.spec.js
+│   ├── appointment/appointment-calendar.spec.js
+│   ├── therapy/therapy-list.spec.js, advised-therapies.spec.js
+│   ├── activity/activity-log.spec.js, activity-filters.spec.js,
+│   │   activity-detail.spec.js
+│   ├── report/appointment/, report/day-end/, report/invoice/,
+│   │   report/medicine/, report/patient/   (one folder per report)
+│   ├── allure-taxonomy.js      modules/suites the Allure report allows
+│   ├── allure-context.js       per-test Allure registration + validation
+│   └── global-setup.js
+├── utils/                      shared data generators and flow steps
+│   ├── random.js
+│   ├── authData.js, authFlow.js
+│   ├── inquirySeed.js
+│   ├── patientData.js, patientFlow.js
+│   └── testDataSetup.js
+├── scripts/
+│   └── check-test-ids.js       every test owns exactly one unique TC id
 ├── playwright.config.js
+├── TESTS.md                    module wise test count and titles
 ├── README.md
-└── start.md
+└── start1.md, start2.md, start3.md   requirement notes
 ```
 
-## Prerequisites
-
-Before running the tests, make sure you have:
-
-- Node.js installed
-- npm installed
-- Playwright browsers installed
-- Access to the AyushManager application environment configured in the project
-
-## Installation
-
-Open PowerShell in the project folder and run:
+## Install
 
 ```powershell
-cd "D:\Avi's-PROJECT\VM project\VM-Automation"
 npm install
 npx playwright install
 ```
 
-If Playwright browsers are not already installed in your environment, the install step is required before executing any tests.
-
-## Running tests
-
-### Run all tests
+## Run
 
 ```powershell
-npx playwright test
+npm test                                              # all tests
+npm run test:ids                                      # id check: 1 test = 1 unique TC id
+npx playwright test tests/patient/patient-list.spec.js   # one file
+npx playwright test tests/report --workers=1            # one module, gentle on the backend
+npx playwright test --headed                           # watch it run
+npx playwright test --debug                            # step through
 ```
 
-### Run a specific test file
+## Reports
 
 ```powershell
-npx playwright test tests/auth/login.spec.js
-npx playwright test tests/patient/addPatient.spec.js
+npm run report           # HTML report
+npm run allure:report    # generate + open the Allure report
+npm run allure:serve     # serve raw allure-results instead
 ```
 
-### Run in headed mode
+## Conventions
 
-```powershell
-npx playwright test --headed
-```
+- Selectors live in page objects; a spec file holds only the business flow.
+- Test ids are gapless (`TC001`–`TC100`) and every test carries a `// TCnnn: ...` summary comment above it. Deleting a test means renumbering the suite and [TESTS.md](TESTS.md).
+- Every test registers `module`, `suite`, `type` and `description` through `applyAllureContext`, validated against `tests/allure-taxonomy.js`. New modules/suites go in the taxonomy first.
+- Each test signs in itself (`workers: 3`, `fullyParallel: false`, no `storageState` reuse — a restored session silently changes the app UI).
+- Each test creates the data it needs and deletes it again, so tests run in any order. Inquiries cannot be deleted by the product, so inquiry tests only ever read or cancel. Report and activity-log tests are read-only by design.
+- Never assert on hardcoded ambient data. Take filter values, search tokens and names off live rows, so the test depends on the page rather than on a record someone may delete.
+- The app refetches lists in the background and answers slowly under load: page objects poll for answered states (rows or the empty message — never a bare zero) instead of reading once, and settle change-aware.
+- When data a test needs is legitimately absent (single-page report, no billed doctor today), the run steps aside with `test.skip(reason)` instead of failing or asserting nothing.
+- `actionTimeout` lives inside `use` in the config (top-level is silently ignored).
+- New suites are verified green on consecutive runs at `--workers=1` before they count — the dev backend buckles under parallel load.
 
-### Run in debug mode
+## Deliberately not covered
 
-```powershell
-npx playwright test --debug
-```
-
-### Use project scripts
-
-The repository includes useful scripts in `package.json`:
-
-```powershell
-npm run test
-npm run test:headed
-npm run test:debug
-npm run report
-npm run allure:generate
-npm run allure:open
-npm run allure:clear
-```
-
-## Test reports
-
-This project is configured to generate multiple report types.
-
-### Playwright HTML report
-
-```powershell
-npx playwright show-report
-```
-
-### Allure report
-
-```powershell
-npm run allure:generate
-npm run allure:open
-```
-
-The project uses a reporter configuration in `playwright.config.js` that includes:
-
-- line reporter for quick console output
-- HTML reporter for browser-based test reports
-- Allure reporter for richer, detailed results
-
-## Configuration
-
-The main configuration file is `playwright.config.js` and includes:
-
-- test folder definition
-- default timeout values
-- base URL: `http://appdev.ayushmanager.com`
-- browser setup for Chromium
-- screenshot and video retention on failure
-- trace capture on retry
-
-## Test data
-
-The project stores login credentials in:
-
-- `data/credentials.json`
-
-This file currently contains a valid QA user used by the login automation flow. Keep this file secure and update credentials as needed based on the environment you are testing.
-
-## Page Object Model design
-
-This framework is organized to keep tests simple and maintainable.
-
-- `BasePage.js` contains shared navigation and wait helpers
-- `LoginPage.js` handles login selectors and actions
-- `DashboardPage.js` verifies the dashboard state
-- `PatientPage.js` encapsulates patient-related actions and validations
-
-This separation allows test files to stay focused on the business flow instead of low-level selectors and repeated browser actions.
-
-## Current coverage
-
-The repository currently includes automation for:
-
-- successful login
-- dashboard verification
-- patient registration
-- patient existence verification after creation
-
-## Best practices used in this project
-
-- Business flows are represented in test specs
-- Selectors are kept in page objects rather than scattered across tests
-- Reusable actions are centralized in shared base classes
-- Assertions validate real UI outcomes, not just method calls
-- Reports help diagnose failures quickly
-
-## Suggested next improvements
-
-As the project evolves, this suite can be expanded with:
-
-- negative login scenarios
-- validation for required fields
-- data-driven patient tests
-- CI/CD execution in GitHub Actions or Azure DevOps
-- environment-based configuration for dev, QA, and prod
-
-## Notes
-
-This project is intentionally structured for readability and growth. It is suitable for ongoing QA automation work on AyushManager and can be expanded with additional modules as more application workflows are covered.
-
-For local execution, make sure you are in the repository root and that your environment matches the configured app URL and credentials.
-
+- Forgot-password OTP screen, resend code and final password reset (need a real registered mobile number).
+- Patient list tab dropdowns for sort/rows-per-page/date (the controls report the choice while rows keep the previous answer; see the note in `pages/patient/PatientListTabsPage.js`).
+- Booking an appointment end to end (the save endpoint usually hangs; the form's safe paths are covered).
+- Prescription workspace contents, follow-up forms, therapy package form, appointment card ellipsis menu (opens nothing), `Absent` appointment status (no rows on record).

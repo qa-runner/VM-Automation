@@ -5,7 +5,7 @@ class BasePage {
 
   // Opens any page using the configured base URL.
   async open(path) {
-    await this.page.goto(path);
+    await this.page.goto("https://appdev.ayushmanager.com/auth/login");
   }
 
   // Waits for the page to finish loading before doing assertions.

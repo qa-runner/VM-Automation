@@ -1,4 +1,16 @@
 node_modules/
 playwright-report/
 test-results/
+allure-report/
+allure-results/
+allure-history/
+# Test data snapshot written by the global setup on every run.
+.testdata/
+# Ignore every markdown file, except the README.
+*.md
+!README.md
 .DS_Store
+start1.md/
+start2.md/
+start3.md/
+start4.md/
